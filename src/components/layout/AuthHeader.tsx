@@ -62,6 +62,9 @@ const AuthHeader = ({
           </span>
         </Button>
 
+        {/* Theme Toggle */}
+        {/* Import and use ThemeToggle component */}
+
         <div className="hidden md:block">
           <Button variant="outline" className="mr-2">
             Sign In

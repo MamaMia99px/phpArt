@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
@@ -20,13 +22,33 @@ const LoginForm = ({
   onForgotPassword = () => {},
   onSocialLogin = () => {},
 }: LoginFormProps) => {
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ email, password, rememberMe });
+    try {
+      // You can replace this with useAuth() hook in a real implementation
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      // Call the onSubmit prop with the form data
+      onSubmit({ email, password, rememberMe });
+    } catch (error: any) {
+      console.error("Error logging in:", error);
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error.message || "Invalid email or password",
+        duration: 5000,
+      });
+    }
   };
 
   return (

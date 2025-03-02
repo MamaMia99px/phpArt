@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +17,7 @@ const RegisterForm = ({
   onSubmit = () => {},
   onLoginClick = () => {},
 }: RegisterFormProps) => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -32,7 +35,7 @@ const RegisterForm = ({
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Basic validation
     if (formData.password !== formData.confirmPassword) {
@@ -40,11 +43,44 @@ const RegisterForm = ({
       console.error("Passwords do not match");
       return;
     }
-    onSubmit({
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-    });
+
+    try {
+      // You can replace this with useAuth() hook in a real implementation
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.name,
+          },
+          emailRedirectTo: window.location.origin,
+        },
+      });
+
+      if (error) throw error;
+
+      // Show success message
+      toast({
+        title: "Registration successful",
+        description: "Please check your email for confirmation link.",
+        duration: 5000,
+      });
+
+      // Call the onSubmit prop with the form data
+      onSubmit({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
+    } catch (error: any) {
+      console.error("Error registering:", error);
+      toast({
+        variant: "destructive",
+        title: "Registration failed",
+        description: error.message || "Something went wrong. Please try again.",
+        duration: 5000,
+      });
+    }
   };
 
   const togglePasswordVisibility = () => {
